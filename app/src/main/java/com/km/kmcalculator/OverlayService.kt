@@ -17,6 +17,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 
 class OverlayService : NotificationListenerService() {
@@ -27,18 +28,34 @@ class OverlayService : NotificationListenerService() {
     private var idealLimit: Float = 0f
     private var minLimit: Float = 0f
 
+    companion object {
+        var isRunning = false
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Pega os limites definidos na MainActivity
         idealLimit = intent?.getFloatExtra("ideal", 0f) ?: 0f
         minLimit = intent?.getFloatExtra("min", 0f) ?: 0f
-        startInForeground()
-        showOverlay()
+
+        // Se o valor vier do KMAccessibilityService, atualiza o texto direto
+        val valorVindoDaAcessibilidade = intent?.getFloatExtra("valor_km_acess", -1f) ?: -1f
+        if (valorVindoDaAcessibilidade > 0) {
+            processarResultado(valorVindoDaAcessibilidade)
+        }
+
+        if (!isRunning) {
+            isRunning = true
+            startInForeground()
+            showOverlay()
+        }
+
         return START_STICKY
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         val packageName = sbn?.packageName ?: return
 
-        // Filtra para ler apenas Uber, 99 e InDrive
+        // Filtra os apps de mobilidade
         if (packageName.contains("ubercab") || packageName.contains("taxis.99") || packageName.contains("indriver")) {
             val extras = sbn.notification.extras
             val title = extras.getString("android.title") ?: ""
@@ -49,21 +66,20 @@ class OverlayService : NotificationListenerService() {
             val km = extrairKm(fullContent)
 
             if (valor != null && km != null && km > 0) {
-                val resultadoKm = valor / km
-                val corHex = when {
-                    resultadoKm >= idealLimit -> "#4CAF50" // Verde
-                    resultadoKm >= minLimit -> "#FFC107"   // Amarelo
-                    else -> "#F44336"                      // Vermelho
-                }
-                atualizarTextoOverlay(String.format("R$ %.2f/km", resultadoKm), corHex)
-            } else {
-                // Se ele ler mas não achar os números, mostra o que tentou ler (ajuda no teste)
-                atualizarTextoOverlay("Aguardando...", "#FFFFFF")
+                processarResultado(valor / km)
             }
         }
     }
 
-    // --- AS FUNÇÕES QUE VOCÊ MANDOU FICAM AQUI ---
+    private fun processarResultado(resultadoKm: Float) {
+        val corHex = when {
+            resultadoKm >= idealLimit -> "#4CAF50" // Verde
+            resultadoKm >= minLimit -> "#FFC107"   // Amarelo
+            else -> "#F44336"                      // Vermelho
+        }
+        atualizarTextoOverlay(String.format("R$ %.2f/km", resultadoKm), corHex)
+    }
+
     private fun extrairValor(texto: String): Float? {
         val regexMoney = Regex("""(?:R\$\s?|S\$\s?|[\$])?\s?(\d+(?:[.,]\d{1,2})?)""")
         val matches = regexMoney.findAll(texto)
@@ -73,11 +89,22 @@ class OverlayService : NotificationListenerService() {
     }
 
     private fun extrairKm(texto: String): Float? {
+        // Tenta buscar KM
         val regexKm = Regex("""(\d+(?:[.,]\d{1,2})?)\s?km""", RegexOption.IGNORE_CASE)
-        val match = regexKm.find(texto)
-        return match?.groupValues?.get(1)?.replace(",", ".")?.toFloatOrNull()
+        val matchKm = regexKm.find(texto)
+        if (matchKm != null) {
+            return matchKm.groupValues[1].replace(",", ".").toFloatOrNull()
+        }
+
+        // Tenta buscar Metros (m) e converte para KM
+        val regexMeters = Regex("""(\d+)\s?m\b""", RegexOption.IGNORE_CASE)
+        val matchMeters = regexMeters.find(texto)
+        if (matchMeters != null) {
+            val metros = matchMeters.groupValues[1].toFloatOrNull() ?: 0f
+            return metros / 1000f
+        }
+        return null
     }
-    // ----------------------------------------------
 
     private fun atualizarTextoOverlay(texto: String, corHex: String) {
         Handler(Looper.getMainLooper()).post {
@@ -86,7 +113,7 @@ class OverlayService : NotificationListenerService() {
                     this.text = texto
                     this.setTextColor(Color.parseColor(corHex))
                 }
-            } catch (e: Exception) {}
+            } catch (e: Exception) { e.printStackTrace() }
         }
     }
 
@@ -117,6 +144,7 @@ class OverlayService : NotificationListenerService() {
             private var initialY = 0
             private var initialTouchX = 0f
             private var initialTouchY = 0f
+
             override fun onTouch(v: View?, event: MotionEvent?): Boolean {
                 when (event?.action) {
                     MotionEvent.ACTION_DOWN -> {
@@ -136,24 +164,37 @@ class OverlayService : NotificationListenerService() {
                 return false
             }
         })
+
+        // Clique longo para fechar rápido
+        overlayView?.setOnLongClickListener {
+            Toast.makeText(this, "Encerrando monitor...", Toast.LENGTH_SHORT).show()
+            stopSelf()
+            true
+        }
+
         windowManager.addView(overlayView, params)
     }
 
     private fun startInForeground() {
         val channelId = "overlay_channel"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, "Monitor", NotificationManager.IMPORTANCE_LOW)
+            val channel = NotificationChannel(channelId, "Monitor KM", NotificationManager.IMPORTANCE_LOW)
             getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
         val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Km Calculator Ativo")
+            .setContentTitle("KM Calculator Ativo")
             .setSmallIcon(R.mipmap.ic_launcher)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
         startForeground(1, notification)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        overlayView?.let { windowManager.removeView(it) }
+        overlayView?.let {
+            windowManager.removeView(it)
+            overlayView = null
+        }
+        isRunning = false
     }
 }

@@ -1,3 +1,12 @@
 <resources>
-    <string name="app_name">Km calculator</string>
+    <string name="app_name">Km Calculator</string>
+
+    <string name="accessibility_description">
+        O KM Calculator lê os valores de ganhos e distância diretamente na tela dos apps de mobilidade para calcular o lucro por KM em tempo real. Não coletamos nem enviamos dados para fora do aparelho.
+    </string>
+
+    <string name="meta_ideal">Meta Ideal (R$/km):</string>
+    <string name="meta_minima">Mínimo Aceitável:</string>
+    <string name="btn_ligar">LIGAR MONITOR</string>
+    <string name="btn_desligar">DESATIVAR MONITOR</string>
 </resources>
