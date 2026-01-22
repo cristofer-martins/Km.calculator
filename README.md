@@ -1,7 +1,3 @@
-Com certeza! Se o foco é GitHub e Open Source, o segredo é usar ícones, tabelas e uma organização que passe autoridade. Um README bem estruturado é o que separa um "projeto de final de semana" de uma "ferramenta essencial".
-
-Aqui está a versão "premium" do seu README.md, pronta para copiar e colar:
-
 🚗 KM Calculator
 Transparência e lucro para motoristas de aplicativo.
 
