@@ -1,58 +1,51 @@
-🚗 KM Calculator
-Transparência e lucro para motoristas de aplicativo.
+🚖 KM Calculator - Monitor de Lucro para Motoristas
+O KM Calculator é uma ferramenta de código aberto desenvolvida para ajudar motoristas de aplicativo (Uber, 99 e InDrive) a calcularem instantaneamente o valor por KM rodado de uma oferta, antes mesmo de aceitá-la.
 
-O KM Calculator é um assistente de produtividade open-source projetado para motoristas da Uber, 99 e InDrive. Ele atua como um HUD (Heads-Up Display) que calcula o valor real por KM das corridas assim que a notificação chega, permitindo decisões rápidas e seguras.
+O diferencial deste projeto é a capacidade de ler os dados tanto de notificações quanto diretamente da tela do aplicativo, garantindo que o cálculo apareça mesmo quando a notificação do sistema é ocultada.
 
-🎯 O Problema vs. A Solução
-Muitas vezes, na pressa do trânsito, é impossível calcular se uma corrida de R$ 12,50 por 7,2km vale a pena.
+✨ Funcionalidades
+Cálculo Automático: Identifica o valor (R$) e a distância (KM/m) e exibe o resultado (R$/km).
 
-O Problema: Aceitar corridas que pagam menos que o seu custo operacional.
+Soma de Distâncias Inteligente: Soma automaticamente o deslocamento até o passageiro e o trajeto da viagem (ex: 688m + 4.2km).
 
-A Solução: Um painel flutuante que lê a notificação e entrega o cálculo pronto: R$ 1,73/km 🟢.
+HUD Flutuante: Uma pequena bolinha sobreposta ao GPS que muda de cor conforme sua meta:
 
-🛠️ Funcionalidades
-Cálculo em Tempo Real: Extração automática de valores via Regex.
+🟢 Verde: Valor ideal ou superior.
 
-Sistema de Cores (Traffic Light):
+🟡 Amarelo: Valor mínimo aceitável.
 
-🟢 Verde: Lucro acima da meta ideal.
+🔴 Vermelho: Abaixo da meta.
 
-🟡 Amarelo: Dentro da margem aceitável.
+Privacidade Total: O app não possui permissão de internet. Todo o processamento é feito localmente no seu celular.
 
-🔴 Vermelho: Abaixo do custo mínimo (Alerta de prejuízo).
+🛠️ Como Instalar e Configurar
+Para que o app funcione corretamente, o Android exige três permissões específicas devido à natureza da leitura de dados:
 
-Privacidade Total: * 🔒 Zero Internet: O app não possui permissão de rede.
+Sobreposição de Tela: Permite que a bolinha do cálculo flutue sobre o app da Uber/99.
 
-🔒 Sem Log: As notificações são processadas em memória e descartadas instantaneamente.
+Acesso a Notificações: Necessário para ler os dados quando o celular está com a tela bloqueada ou em outro app.
 
-📲 Como Instalar e Configurar
-Devido às políticas de segurança do Android para apps que leem notificações fora da Play Store, siga estes passos:
+Serviço de Acessibilidade: Essencial para ler os valores diretamente dentro do app da 99/Uber quando a notificação não aparece.
 
-Download: Baixe o arquivo .apk mais recente na aba Releases.
+Nota para usuários Xiaomi (MIUI/HyperOS): > Vá em Informações do App > Outras Permissões e ative "Exibir janelas pop-up enquanto em segundo plano". Além disso, em Economia de Bateria, selecione "Nenhuma restrição".
 
-Instalação: Abra o arquivo e autorize a instalação de fontes desconhecidas.
+🚀 Tecnologias Utilizadas
+Linguagem: Kotlin
 
-Configurações Restritas (Android 13+):
+Serviços: NotificationListenerService e AccessibilityService
 
-Vá em Configurações > Apps > KM Calculator.
+UI: Jetpack Compose e XML Views
 
-Toque nos 3 pontinhos no canto superior direito.
+Regex: Expressões regulares avançadas para captura de múltiplos formatos de moeda e distância (KM e Metros).
 
-Selecione "Permitir configurações restritas".
+🛡️ Segurança
+Este projeto foi construído sob o princípio da transparência. Motoristas lidam com dados sensíveis, por isso:
 
-Permissões: Abra o app e conceda acesso à Sobreposição de Tela e Acesso a Notificações.
+O código é 100% aberto para auditoria.
 
-⚙️ Configuração de Metas
-Dentro do app, você define seus parâmetros: | Parâmetro | Descrição | Exemplo | | :--- | :--- | :--- | | Meta Ideal | Valor para o "Verde" | R$ 2,00/km | | Mínimo Aceitável | Limite antes do "Vermelho" | R$ 1,50/km |
+Não há coleta de logs ou telemetria.
 
-🤝 Contribuição
-Este projeto é de código aberto e feito para a comunidade.
+O serviço de acessibilidade é usado estritamente para capturar os números da oferta de corrida.
 
-Achou um erro na leitura de algum app? Abra uma Issue.
-
-Quer melhorar o design? Envie um Pull Request.
-
-📄 Licença
-Distribuído sob a licença MIT. Veja LICENSE para mais informações.
-
-Feito por motoristas, para motoristas. ✊
+Quer contribuir?
+Sinta-se à vontade para abrir uma Issue ou enviar um Pull Request com melhorias na lógica de captura ou novos layouts para o HUD!
